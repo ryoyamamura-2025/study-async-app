@@ -14,7 +14,7 @@ def read_root():
       <head><meta charset="utf-8"><title>Hello</title></head>
       <body style="font-family:system-ui; margin:40px;">
         <h1>FastAPI + uv (editable)</h1>
-        <p>これはルートaaaaa <code>/</code> に HTML を返すデモです。</p>
+        <p>これはルート <code>/</code> に HTML を返すデモです。</p>
       </body>
     </html>
     """
