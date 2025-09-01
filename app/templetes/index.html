@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini 非同期チャットサンプル</title>
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+    <div id="chat-container">
+        <header>
+            <h1>Gemini 非同期サンプル</h1>
+            <p>異なるモデルへのリクエストを非同期で実行します</p>
+        </header>
+        <div id="chat-box-wrapper">
+            <textarea id="chat-box" readonly placeholder="ここにGeminiからの返信が表示されます..."></textarea>
+            <div id="loader" class="hidden">
+                <div class="spinner"></div>
+            </div>
+        </div>
+        <button id="start-chat-btn">チャット開始</button>
+    </div>
+    <script src="static/script.js"></script>
+</body>
+</html>
