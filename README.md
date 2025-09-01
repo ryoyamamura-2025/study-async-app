@@ -19,5 +19,12 @@ bash rebuild.sh
 
 3. uvicorn のホットリロードで実行しているので、スクリプト編集が即座に反映される
 
+## Cloud run へのデプロイ
+デプロイ用のスクリプトを実行（プロジェクト ID 等は適切に設定）
+```
+cp deploy.sh.dev deploy.sh
+bash deploy.sh
+```
+
 ## 参考
 - uv on docker: [uv 公式ドキュメント](https://docs.astral.sh/uv/guides/integration/docker/#non-editable-installs)
