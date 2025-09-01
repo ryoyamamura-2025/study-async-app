@@ -1,85 +1,87 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const startChatBtn = document.getElementById('start-chat-btn');
-    const chatBox = document.getElementById('chat-box');
-    const loader = document.getElementById('loader');
+// static/script.js
 
-    // バックエンドAPIのエンドポイント
-    const API_ENDPOINT = '/api/gemini/generate';
+/**
+ * ==== クライアントが知る必要があるのは “エンドポイント” と “リクエスト型/レスポンス型” だけ ==== 
+ *
+ * Request (JSON):
+ *   {
+ *     language: "ja" | "en",  // default "ja"
+ *     audience?: string       // 任意
+ *   }
+ *
+ * Response (JSON):
+ *   {
+ *     model: string,
+ *     text: string
+ *   }
+ */
 
-    /**
-     * バックエンドAPIへリクエストを送信する非同期関数
-     * この関数はシミュレーションのため、そのまま使用します。
-     */
-    async function callGeminiApi(model, prompt, delay) {
-        // ...（この関数の中身は変更ありません）
-        console.log(`[リクエスト送信] モデル: ${model}, プロンプト: "${prompt}"`);
-        return new Promise(resolve => {
-            setTimeout(() => {
-                const responseText = `"${prompt}" に応えて、最高の挨拶をします！ こんにちは！`;
-                console.log(`[レスポンス受信] モデル: ${model}`);
-                resolve(`[${model}からの返信]: ${responseText}`);
-            }, delay);
-        });
-    }
+const API_BASE = "/api";
 
-    /**
-     * チャット開始ボタンがクリックされたときの処理
-     */
-    startChatBtn.addEventListener('click', async () => {
-        // UIを処理開始状態に更新
-        chatBox.value = '';
-        loader.classList.remove('hidden');
-        startChatBtn.disabled = true;
-        chatBox.placeholder = "Geminiからの返信を待っています...";
+const $ = (sel) => document.querySelector(sel);
+const startBtn = $("#startBtn");
+const spinner = $("#spinner");
+const chatBox = $("#chatBox");
 
-        try {
-            // --- 1. 全てのリクエストを並行して開始 ---
-            const promise1 = callGeminiApi('gemini-1.5-flash-lite', 'あいさつを返す', 1000);
-            const promise2 = callGeminiApi('gemini-1.5-flash', 'あいさつを返す', 2000); // 遅延を少し調整して動作を確認しやすくします
-            const promise3 = callGeminiApi('gemini-1.5-flash', '最高の挨拶を考えて返す', 3000);
+function setBusy(busy) {
+  spinner.hidden = !busy;
+  spinner.setAttribute("aria-busy", busy ? "true" : "false");
+  startBtn.disabled = busy;
+}
 
-            // --- 2. 全てのリクエストが完了するまで待機 ---
-            // Promise.allSettled は、いずれかが失敗しても全ての完了を待つため、エラー耐性が高いです。
-            const results = await Promise.allSettled([promise1, promise2, promise3]);
+async function postJSON(path, body) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body ?? {}),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`HTTP ${res.status}: ${text || res.statusText}`);
+  }
+  return /** @type {{model:string, text:string}} */ (await res.json());
+}
 
-            // --- 3. 全てのデータが揃ってから、UIを更新 ---
-            // これによりエラー処理がシンプルになり、意図せず処理が止まることを防ぎます。
+function appendLine(line) {
+  chatBox.value += (chatBox.value ? "\n" : "") + line;
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
 
-            // リクエスト1の結果を処理
-            if (results[0].status === 'fulfilled') {
-                chatBox.value += `✅ [速いモデルからの最初の返信]\n${results[0].value}\n\n`;
-            } else {
-                console.error('Promise 1 failed:', results[0].reason);
-                chatBox.value += `❌ [速いモデルからの返信でエラーが発生しました]\n\n`;
-            }
+async function startChat() {
+  setBusy(true);
+  chatBox.value = ""; // クリア
 
-            // リクエスト2と3の結果を処理
-            const response2 = results[1];
-            const response3 = results[2];
-            
-            // 両方が成功した場合
-            if (response2.status === 'fulfilled' && response3.status === 'fulfilled') {
-                chatBox.value += `✅ [標準モデルからの返信 (2件)]\n- ${response2.value}\n- ${response3.value}\n\n`;
-            } else {
-                // どちらか、または両方が失敗した場合
-                chatBox.value += `⚠️ [標準モデルからの返信に問題がありました]\n`;
-                if (response2.status === 'rejected') {
-                    console.error('Promise 2 failed:', response2.reason);
-                }
-                 if (response3.status === 'rejected') {
-                    console.error('Promise 3 failed:', response3.reason);
-                }
-            }
+  // クライアントから渡すデータ型はこれだけ（サンプル）
+  const payload = { language: "ja" /*, audience: "お客様" */ };
 
-        } catch (error) {
-            // このcatchは、await Promise.allSettled 自体のエラーなど、予期せぬ重大なエラーを捕捉します
-            console.error('チャット処理中に予期せぬエラーが発生しました:', error);
-            chatBox.value += 'エラーが発生しました。詳細はコンソールを確認してください。';
-        } finally {
-            // このブロックは try 内の処理が成功しようと失敗しようと、必ず最後に実行されます
-            loader.classList.add('hidden');
-            startChatBtn.disabled = false;
-            chatBox.placeholder = "ここにGeminiからの返信が表示されます...";
-        }
+  // 1) lite（戻り次第すぐ表示）
+  const p1 = postJSON("/gemini/flash-lite/greet", payload)
+    .then((r) => {
+      appendLine(`【1:${r.model}】\n${r.text}`);
+      return r;
     });
+
+  // 2) flash
+  const p2 = postJSON("/gemini/flash/greet", payload);
+
+  // 3) flash（最高の挨拶）
+  const p3 = postJSON("/gemini/flash/greet_best", payload);
+
+  try {
+    // 1 は待たずに先に出す（p1.then でやっている）
+    // 2 と 3 は両方揃ってから追記
+    const [, r2, r3] = await Promise.all([p1, p2, p3]);
+    appendLine("\n— ②③ の結果 —");
+    appendLine(`【2:${r2.model}】\n${r2.text}`);
+    appendLine(`【3:${r3.model}】\n${r3.text}`);
+  } catch (err) {
+    console.error(err);
+    appendLine(`⚠ エラーが発生しました: ${err instanceof Error ? err.message : String(err)}`);
+  } finally {
+    setBusy(false);
+  }
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  startBtn.addEventListener("click", startChat);
 });
