@@ -3,8 +3,127 @@
 <head>
   <meta charset="utf-8" />
   <title>横浜花火大会での台船火災と鎮火、原因分析</title>
+  <style>
+    /* =========
+       ページサイズ A4 固定
+    ========= */
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 210mm;   /* A4 幅 */
+      height: 297mm;  /* A4 高さ */
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "Noto Sans JP", sans-serif;
+      line-height: 1.5;
+    }
+
+    /* =========
+       カラーテーマ
+    ========= */
+    :root {
+      --bg: #ffffff;
+      --fg: #222222;
+      --muted: #555555;
+      --border: #cccccc;
+      --accent: #004aad;
+    }
+    body[data-theme="dark"] {
+      --bg: #0b0b0c;
+      --fg: #e9eaed;
+      --muted: #9aa0a6;
+      --border: #2a2a31;
+      --accent: #6ea8fe;
+    }
+    body[data-theme="blue"] {
+      --bg: #0b1220;
+      --fg: #e8eefc;
+      --muted: #93a1c8;
+      --border: #1d2a56;
+      --accent: #3da5ff;
+    }
+    body[data-theme="rose"] {
+      --bg: #180d14;
+      --fg: #ffeef7;
+      --muted: #f0b9cf;
+      --border: #3a2230;
+      --accent: #ff6aa1;
+    }
+
+    /* =========
+       全体レイアウト
+    ========= */
+    .report {
+      box-sizing: border-box;
+      padding: 20mm;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .report-header {
+      margin-bottom: 12pt;
+    }
+
+    .report-title {
+      margin: 0 0 6pt;
+      font-size: 18pt;
+      font-weight: bold;
+    }
+
+    .report-abstruct {
+      margin: 0;
+      font-size: 11pt;
+      color: var(--muted);
+    }
+
+    /* =========
+       セクション横並び（列レイアウト）
+    ========= */
+    .sections {
+      flex: 1;
+      display: flex;
+      gap: 8pt;
+      max-width: 300px;
+    }
+
+    .report-section {
+      flex: 1; /* 等幅列 */
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border);
+      padding: 6pt;
+      box-sizing: border-box;
+    }
+
+    .section-title {
+      font-size: 12pt;
+      margin: 0 0 4pt;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .screenshot-image {
+      width: 30.0%;
+      height: 100pt; /* 固定高さ */
+      object-fit: cover;
+      border: 1px solid var(--border);
+      margin-bottom: 4pt;
+    }
+
+    .section-abstruct {
+      font-size: 10pt;
+      color: var(--muted);
+      margin: 0;
+      flex: 1; /* 余白を埋める */
+    }
+  </style>
 </head>
-<body>
+<body data-theme="rose">
   <article class="report">
     <header class="report-header">
       <h1 class="report-title">横浜花火大会での台船火災と鎮火、原因分析</h1>
