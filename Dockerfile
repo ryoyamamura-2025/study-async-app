@@ -15,8 +15,8 @@ COPY pyproject.toml uv.lock /app/
 RUN uv sync --locked --no-install-project
 
 # 5) ここで初めてソースをコピー
-ADD . /app
-
+COPY pyproject.toml uv.lock ./
+COPY ./app ./
 # 6) プロジェクト本体を editable で同期 
 #    Cloud run への Deploy 時は BuildKit が使えない
 RUN uv sync
@@ -27,4 +27,4 @@ EXPOSE 8080
 # 8) コンテナ起動時のコマンド
 #    uv 経由で uvicorn を実行。app.main:app を 0.0.0.0:8080 で起動
 #    Deploy 時は ホットリロードは不要
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]

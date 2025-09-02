@@ -12,12 +12,11 @@ import uvicorn
 app = FastAPI(title="Gemini Async Chat Sample")
 
 # 静的ファイル提供 & ルートで index.html
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/", include_in_schema=False)
 async def root():
-    return FileResponse(os.path.join(BASE_DIR, 'templetes/index.html'))
+    return FileResponse('templates/index.html')
 
 # ====== 設定・共通ユーティリティ ======
 

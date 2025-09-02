@@ -20,7 +20,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-install-project
 
 # 5) ここで初めてソースをコピー
-ADD . /app
+COPY pyproject.toml uv.lock ./
+COPY ./app ./
 
 # 6) プロジェクト本体を editable で同期（デフォルトが editable）
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked
@@ -29,5 +30,5 @@ RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked
 EXPOSE 8080
 
 # 8) コンテナ起動時のコマンド
-#    uv 経由で uvicorn を実行。app.main:app を 0.0.0.0:8080 で起動
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
+#    uv 経由で uvicorn を実行。main:app を 0.0.0.0:8080 で起動
+CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
