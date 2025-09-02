@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>横浜花火大会での台船火災と鎮火、原因分析</title>
+  <style>
+    /* =========
+       ページサイズ A4 固定
+    ========= */
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 210mm;   /* A4 幅 */
+      height: 297mm;  /* A4 高さ */
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "Noto Sans JP", sans-serif;
+      line-height: 1.5;
+    }
+
+    /* =========
+       カラーテーマ
+    ========= */
+    :root {
+      --bg: #ffffff;
+      --fg: #222222;
+      --muted: #555555;
+      --border: #cccccc;
+      --accent: #004aad;
+    }
+    body[data-theme="dark"] {
+      --bg: #0b0b0c;
+      --fg: #e9eaed;
+      --muted: #9aa0a6;
+      --border: #2a2a31;
+      --accent: #6ea8fe;
+    }
+    body[data-theme="blue"] {
+      --bg: #0b1220;
+      --fg: #e8eefc;
+      --muted: #93a1c8;
+      --border: #1d2a56;
+      --accent: #3da5ff;
+    }
+    body[data-theme="rose"] {
+      --bg: #180d14;
+      --fg: #ffeef7;
+      --muted: #f0b9cf;
+      --border: #3a2230;
+      --accent: #ff6aa1;
+    }
+
+    /* =========
+       全体レイアウト
+    ========= */
+    .report {
+      box-sizing: border-box;
+      padding: 20mm;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .report-header {
+      margin-bottom: 12pt;
+    }
+
+    .report-title {
+      margin: 0 0 6pt;
+      font-size: 18pt;
+      font-weight: bold;
+    }
+
+    .report-abstruct {
+      margin: 0;
+      font-size: 11pt;
+      color: var(--muted);
+    }
+
+    /* =========
+       セクション横並び（列レイアウト）
+    ========= */
+    .sections {
+      flex: 1;
+      display: flex;
+      gap: 8pt;
+      /* max-width: 300px; */
+    }
+
+    .report-section {
+      flex: 1; /* 等幅列 */
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border);
+      padding: 6pt;
+      box-sizing: border-box;
+      align-self: flex-start; 
+    }
+
+    .section-title {
+      font-size: 12pt;
+      margin: 0 0 4pt;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .screenshot-image {
+      width: 100.0%;
+      height: 100pt; /* 固定高さ */
+      object-fit: cover;
+      border: 1px solid var(--border);
+      margin-bottom: 4pt;
+    }
+
+    .section-abstruct {
+      font-size: 10pt;
+      color: var(--muted);
+      margin: 0;
+      /* flex: 1; 余白を埋める */
+    }
+  </style>
+</head>
+<body data-theme="rose">
+  <article class="report">
+    <header class="report-header">
+      <h1 class="report-title">横浜花火大会での台船火災と鎮火、原因分析</h1>
+      <p class="report-abstruct">横浜で開催された花火大会で、花火を打ち上げるための台船から火災が発生しました。火災は長時間にわたり、最終的に鎮火しましたが、台船は大きく損傷しました。この火災の原因として、花火の「低空開花」が指摘されており、製品不良や連鎖反応の可能性が示唆されています。</p>
+    </header>
+    <!-- sections will be injected below -->
+    <div class="sections">
+    <section class="report-section">
+  <h2 class="section-title">火災発生と初期対応</h2>
+  <p class="section-abstruct">横浜の花火大会中に台船で火災が発生し、花火が暴発する様子が捉えられています。作業員は海に飛び込み救助されましたが、火災はなかなか鎮火しませんでした。</p>
+  <div class="image-placeholder">
+  <!-- スクリーンショットの挿入場所 -->
+  <img src="https://goo.gle/instrument-img" alt="screenshot {time}" class="screenshot-image" />
+</div>
+
+</section>
+
+<section class="report-section">
+  <h2 class="section-title">鎮火までの経緯と台船の状況</h2>
+  <p class="section-abstruct">火災発生から15時間半後、海上保安庁による放水活動を経て、ようやく火災が鎮火しました。損傷した台船は大黒ふ頭へ曳航され、その惨状が明らかになりました。</p>
+  <div class="image-placeholder">
+  <!-- スクリーンショットの挿入場所 -->
+  <img src="https://goo.gle/instrument-img" alt="screenshot {time}" class="screenshot-image" />
+</div>
+
+</section>
+
+<section class="report-section">
+  <h2 class="section-title">火災原因の分析</h2>
+  <p class="section-abstruct">花火研究家は、火災の原因として「低空開花」を指摘し、製品不良や連鎖反応の可能性を推測しています。海上保安庁は、残存する花火の危険性を考慮し、安全確保後に原因究明を行う方針です。</p>
+  <div class="image-placeholder">
+  <!-- スクリーンショットの挿入場所 -->
+  <img src="https://goo.gle/instrument-img" alt="screenshot {time}" class="screenshot-image" />
+</div>
+
+</section>
+</div>
+  </article>
+</body>
+</html>
