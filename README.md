@@ -26,5 +26,8 @@ cp deploy.sh.dev deploy.sh
 bash deploy.sh
 ```
 
+## トラブルシューティング
+- ローカル開発用コンテナの起動スクリプト：Dockerfile で app ディレクトリ配下のみイメージにコピーしているが、 `docker run ~~ -v "$PWD":/app ~~` としてしまうと、マウントしたディレクトリで上書きされてしまうので注意。ローカル開発時は `-v "$PWD":/workspace -w /workspace/app` で解決。
+
 ## 参考
 - uv on docker: [uv 公式ドキュメント](https://docs.astral.sh/uv/guides/integration/docker/#non-editable-installs)
