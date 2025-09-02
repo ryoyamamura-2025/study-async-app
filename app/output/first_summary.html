@@ -89,7 +89,7 @@
       flex: 1;
       display: flex;
       gap: 8pt;
-      max-width: 300px;
+      /* max-width: 300px; */
     }
 
     .report-section {
@@ -99,6 +99,7 @@
       border: 1px solid var(--border);
       padding: 6pt;
       box-sizing: border-box;
+      align-self: flex-start; 
     }
 
     .section-title {
@@ -108,7 +109,7 @@
     }
 
     .screenshot-image {
-      width: 30.0%;
+      width: 100.0%;
       height: 100pt; /* 固定高さ */
       object-fit: cover;
       border: 1px solid var(--border);
@@ -119,7 +120,7 @@
       font-size: 10pt;
       color: var(--muted);
       margin: 0;
-      flex: 1; /* 余白を埋める */
+      /* flex: 1; 余白を埋める */
     }
   </style>
 </head>
@@ -130,6 +131,7 @@
       <p class="report-abstruct">横浜で開催された花火大会で、花火を打ち上げるための台船から火災が発生しました。火災は長時間にわたり、最終的に鎮火しましたが、台船は大きく損傷しました。この火災の原因として、花火の「低空開花」が指摘されており、製品不良や連鎖反応の可能性が示唆されています。</p>
     </header>
     <!-- sections will be injected below -->
+    <div class="sections">
     <section class="report-section">
   <h2 class="section-title">火災発生と初期対応</h2>
   <p class="section-abstruct">横浜の花火大会中に台船で火災が発生し、花火が暴発する様子が捉えられています。作業員は海に飛び込み救助されましたが、火災はなかなか鎮火しませんでした。</p>
@@ -159,7 +161,7 @@
 </div>
 
 </section>
-
+</div>
   </article>
 </body>
 </html>
