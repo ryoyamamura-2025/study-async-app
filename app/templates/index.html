@@ -1,0 +1,56 @@
+<!-- static/index.html -->
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <title>Gemini Async Chat Sample</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="header">
+        <h1 class="title">Gemini Async Chat</h1>
+        <p class="subtitle">薄い紫ベースのミニマルUI / 非同期サンプル</p>
+      </header>
+
+      <section class="panel">
+        <div class="controls">
+          <button id="startBtn" class="button">
+            ▶ チャット開始
+          </button>
+          <div class="spinner" id="spinner" role="status" aria-live="polite" aria-busy="false" hidden>
+            <svg class="spin" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke-width="3" fill="none" />
+            </svg>
+            <span class="sr-only">実行中...</span>
+          </div>
+        </div>
+
+        <div class="info">
+          <details>
+            <summary>このデモの動き</summary>
+            <ol>
+              <li>gemini-2.5-flash-lite に「挨拶」を非同期実行 → 返ってきたら即表示</li>
+              <li>gemini-2.5-flash に「挨拶」を非同期実行</li>
+              <li>gemini-2.5-flash に「最高の挨拶」を非同期実行</li>
+              <li>②③は両方揃ってから追記表示</li>
+            </ol>
+          </details>
+        </div>
+
+        <label for="chatBox" class="label">テキストボックス</label>
+        <textarea id="chatBox" class="textbox" rows="10" readonly placeholder="ここに応答が表示されます"></textarea>
+      </section>
+
+      <footer class="footer">
+        <small>© Chat Sample · FastAPI + HTML/CSS/JS</small>
+      </footer>
+    </main>
+
+    <script src="/static/script.js" defer></script>
+  </body>
+</html>

@@ -21,6 +21,7 @@ echo ">>> Starting new container..."
 docker run -it \
   --name ${CONTAINER_NAME} \
   -p 3232:8080 \
-  -v "$PWD":/app \
+  -v "$PWD":/workspace \
+  -w /workspace/app \
   ${IMAGE_NAME}:${TAG}
 
