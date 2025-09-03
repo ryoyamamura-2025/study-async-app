@@ -1,8 +1,5 @@
 deploy.sh
-app/prompt/prompt.py
-app/prompt/json_schema.py
 credentials.json
-test.py
 
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
