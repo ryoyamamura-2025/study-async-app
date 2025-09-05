@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from prompt.prompt import VIDEO_SUMMARY_PROMPT
+from prompt.prompt import VIDEO_SUMMARY_PROMPT, SUPP_INFO_PROMPT
 from prompt.json_schema import SUMMARY_SCHEMA
 
 # =================================
@@ -238,3 +238,69 @@ async def video_summary_with_caption_v2():
 
     return response_parsed, response
 
+class geminiApiCallerWithTool(geminiApiCaller):
+    """
+    Search Tool 付きで Gemini API を呼び出すクラス。geminiApiCallerを継承
+    """
+    def __init__(self, model_name, thinking_budget, response_schema=None, input_media=None):
+        super().__init__(
+            model_name = model_name, 
+            thinking_budget=thinking_budget, 
+            response_schema=response_schema, 
+            input_media=input_media
+        )
+
+    # オーバーライド
+    def set_generate_content_config(self):
+        # Define the grounding tool
+        grounding_tool = types.Tool(
+            google_search=types.GoogleSearch()
+        )
+        
+        base = dict(
+            temperature=0, top_p=1, seed=0, max_output_tokens=65535,
+            response_modalities=["TEXT"],
+            safety_settings = [
+            types.SafetySetting(
+                category="HARM_CATEGORY_HATE_SPEECH",
+                threshold="OFF"),
+            types.SafetySetting(
+                category="HARM_CATEGORY_DANGEROUS_CONTENT",
+                threshold="OFF"),
+            types.SafetySetting(
+                category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                threshold="OFF"),
+            types.SafetySetting(
+                category="HARM_CATEGORY_HARASSMENT",
+                threshold="OFF"
+                )
+            ],
+            thinking_config=types.ThinkingConfig(thinking_budget=self.thinking_budget),  # SDKに合わせる
+            tools=[grounding_tool]
+        )
+        if self.response_schema:
+            base.update(response_mime_type="application/json", response_schema=self.response_schema)
+        if self.media_resolution:
+            base.update(mediaResolution="MEDIA_RESOLUTION_LOW")
+        return types.GenerateContentConfig(**base)
+
+
+def search_supp_info(markdown_text):
+    """
+    テキストから関連情報を検索して有益なAppendixを作成
+    tools を使用
+    """
+    api_caller = geminiApiCallerWithTool(
+        model_name = "gemini-2.5-flash",
+        thinking_budget = -1,
+    )
+
+    lang = "ja"
+    prompt = SUPP_INFO_PROMPT.format(
+        lang=lang,
+        input_text=markdown_text
+    )
+
+    response_text, response = api_caller.text2text(prompt)
+
+    return response_text, response

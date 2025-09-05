@@ -1,6 +1,7 @@
 deploy.sh
 credentials.json
 sample_output.json
+sample_output.md
 
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
