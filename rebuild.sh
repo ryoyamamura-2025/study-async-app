@@ -17,6 +17,8 @@ if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
   docker rm -f ${CONTAINER_NAME}
 fi
 
+docker image prune -f
+
 echo ">>> Starting new container..."
 docker run -it \
   --name ${CONTAINER_NAME} \
