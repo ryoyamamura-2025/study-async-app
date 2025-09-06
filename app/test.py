@@ -84,6 +84,160 @@ text = """
 print(text[337:545])
 
 import domain.postprocessing as ps
-url, title = ps.fetch_final_url_and_title("https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFOcvoIb7txqqb8eyQkB_oXqJs0TVU-yeG2LwMIQENAxyVd4cbYfXihdeeX8yfJyK-RYjU0bph6A_PrFMjL_JtlLmppduP1NwlfO0LNG_dnfySOjktQpMYDHaYafY6A-ImMDM09gCM=")
+url, title = ps.fetch_final_url_and_title("ああああ")
 print(url)
 print(title)
+import json
+
+# サンプルJSON
+data = {
+    "scenes": [
+        { "id": 1, "description": "朝の街並み。通勤する人々が忙しそうに歩いている。" },
+        { "id": 2, "description": "公園で子供たちが遊んでいる。太陽が木漏れ日を作っている。" },
+        { "id": 3, "description": "公園の近くの海辺では、街から来た人々が散歩している。" },
+        { "id": 4, "description": "街は夜になると賑わい、海辺では潮風が強くなる。" }
+    ]
+}
+
+# キーワード配列
+keywords = [
+    { "keyword": "街", "explanation": "建物や道路が集まり、人々が生活している地域" },
+    { "keyword": "海", "explanation": "広大な水域で、多くの生命を育む場所" },
+    { "keyword": "公園", "explanation": "市民の憩いの場として利用される緑地" },
+    { "keyword": "海辺", "explanation": "海に面した沿岸部" },
+]
+
+def annotate_scene(scene, keywords_array, already_assigned):
+    desc = scene.get("description", "")
+    if not desc:
+        return set()
+
+    # --- 最長一致・非重複のマッチ列を構築（長いキーワード優先） ---
+    kws_sorted = sorted(keywords_array, key=lambda k: len(k["keyword"]), reverse=True)
+    matches = []  # (start, end, kw_obj)
+    i = 0
+    while i < len(desc):
+        hit = None
+        for kw_obj in kws_sorted:
+            kw = kw_obj["keyword"]
+            if desc.startswith(kw, i):
+                hit = kw_obj
+                break
+        if hit:
+            start, end = i, i + len(hit["keyword"])
+            matches.append((start, end, hit))
+            i = end
+        else:
+            i += 1
+
+    if not matches:
+        return set()
+
+    # --- appendix 対象キーワードを決定（全体で初登場のみ） ---
+    appendix = []
+    star_map = {}
+    next_star = 1
+    appended_now = set()
+    for _, _, kw_obj in matches:
+        kw = kw_obj["keyword"]
+        if kw not in already_assigned:
+            if kw not in star_map:  # 初登場のものだけ * を割り当て
+                star_map[kw] = next_star
+                next_star += 1
+            if kw not in appended_now:  # appendix も初登場にだけ
+                appendix.append({
+                    "keyword": kw,
+                    "explanation": kw_obj["explanation"]
+                })
+                appended_now.add(kw)
+                already_assigned.add(kw)
+
+    # --- description を再構築（初登場のものだけ * を付与） ---
+    if star_map:
+        parts = []
+        last = 0
+        for start, end, kw_obj in matches:
+            kw = kw_obj["keyword"]
+            if kw in star_map:
+                parts.append(desc[last:start])
+                parts.append(desc[start:end] + ("*" * star_map[kw]))
+                last = end
+            else:
+                # 既出キーワードはそのまま
+                parts.append(desc[last:end])
+                last = end
+        parts.append(desc[last:])
+        scene["description"] = "".join(parts)
+
+    # --- appendix を追加 ---
+    if appendix:
+        scene["appendix"] = appendix
+
+    return appended_now
+
+# 全シーンへ適用
+assigned_keywords = set()
+for s in data["scenes"]:
+    annotate_scene(s, keywords, assigned_keywords)
+
+print(json.dumps(data, ensure_ascii=False, indent=2))
+
+
+import json
+
+def build_keywords_list(data):
+    """
+    KEYWORDS_SCHEMA に従った JSON から
+    { "keyword": ..., "explanation": "説明文（出典: ...）" } のリストを生成する
+    """
+    result = []
+
+    for entry in data.get("keywords", []):
+        keyword = entry["keyword"]
+        explanation = entry["explanation"]
+        citations = entry.get("citations", [])
+
+        if not citations:
+            # cite_text = "出典: 不明"
+            # 出典がなければスキップ（ハルシネーションの疑いがあるためフロントに返さない）
+            continue
+        else:
+            title = citations[0]["title"]
+            # 16文字以降を「…」に省略
+            if len(title) > 15:
+                title = title[:15] + "…"
+
+            if len(citations) > 1:
+                cite_text = f"出典: {title} など"
+            else:
+                cite_text = f"出典: {title}"
+
+        result.append({
+            "keyword": keyword,
+            "explanation": f"{explanation}（{cite_text}）"
+        })
+
+    return result
+
+# --- 動作テスト用 ---
+sample_json = {
+    "keywords": [
+        {
+            "keyword": "街",
+            "explanation": "建物や道路が集まり、人々が生活している地域",
+            "citations": [
+                {"title": "とても長い長い参考文献タイトルABCDEF", "url": "https://example.com"},
+                {"title": "別の出典", "url": "https://example.org"}
+            ]
+        },
+        {
+            "keyword": "海",
+            "explanation": "広大な水域で、多くの生命を育む場所",
+            "citations": [
+                {"title": "海洋学の基礎", "url": "https://example.com"}
+            ]
+        }
+    ]
+}
+
+print(json.dumps(build_keywords_list(sample_json), ensure_ascii=False, indent=2))

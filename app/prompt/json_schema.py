@@ -66,3 +66,46 @@ SUMMARY_SCHEMA = {
   "required": ["title", "abstruct", "sections"]
 }
 
+KEYWORDS_SCHEMA = {
+  "type": "object",
+  "description": "キーワードの辞書（キーワードと説明、出典リンクの一覧）",
+  "properties": {
+    "keywords": {
+      "type": "array",
+      "description": "キーワードエントリ一覧",
+      "items": {
+        "type": "object",
+        "properties": {
+          "keyword": {
+            "type": "string",
+            "description": "キーワード",
+          },
+          "explanation": {
+            "type": "string",
+            "description": "キーワードの説明文",
+          },
+          "citations": {
+            "type": "array",
+            "description": "出典/参考リンクの配列",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "出典のタイトル",
+                },
+                "url": {
+                  "type": "string",
+                  "description": "出典URL",
+                }
+              },
+              "required": ["title", "url"],
+            }
+          }
+        },
+        "required": ["keyword", "explanation", "citations"],
+      }
+    }
+  },
+  "required": ["keywords"],
+}
