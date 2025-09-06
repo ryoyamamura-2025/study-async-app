@@ -2,8 +2,8 @@ import os
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from prompt.prompt import VIDEO_SUMMARY_PROMPT
-from prompt.json_schema import SUMMARY_SCHEMA
+from prompt.prompt import VIDEO_SUMMARY_PROMPT, SUPP_INFO_PROMPT, KEYWORD_EXTRACT_PROMPT
+from prompt.json_schema import SUMMARY_SCHEMA, KEYWORDS_SCHEMA
 
 # =================================
 # Gemini 推論設定
@@ -16,65 +16,65 @@ BUCKET_NAME = os.environ["GCS_BUCKET_NAME"]
 
 # Geminiクライアント初期化
 # client = genai.Client(api_key=GEMINI_API_KEY)
-__client = genai.Client(
+_client = genai.Client(
     vertexai=True,
     project=GCP_PROJECT_ID,
     location=LOCATION,
     http_options=types.HttpOptions(api_version="v1")
   )
 
-async def video_summary_with_caption_v2():
-    blob_name = "kaji.mp4"
-    lang = "ja"
-    video_length_sec = 205
-    hms = "0:03:25"
-    print("動画の長さ: " + hms)
 
-    prompt = VIDEO_SUMMARY_PROMPT.format(
-        lang=lang,
-        hms=hms
-    )
+class geminiApiCaller():
+    """
+    Gemini API を呼び出すクラス。セーフティセッティング等は共通化する
+    """
+    def __init__(self, model_name, thinking_budget, response_schema=None, input_media=None):
+        self.model_name = model_name
+        self.thinking_budget = thinking_budget
+        self.response_schema = response_schema
+        if input_media:
+            self.input_media = self.set_media(input_media)
+        else:
+            self.input_media = None
+        self.media_resolution = input_media.get("resolution", "") if input_media else None
 
-    response_schema = SUMMARY_SCHEMA
+    def set_media(self, input_media):
+        """
+        example:
+        input_media = {
+            "blob_name": "xxxx.mp4",
+            "start_offset": "0s",
+            "end_offset": "1000s"
+        }
+        """
+        blob_name = input_media["blob_name"]
+        so, eo = input_media["start_offset"], input_media["end_offset"]
 
-    __using_model = "gemini-2.5-flash"
-    __thinking_budget = -1
-    print(f"thinking budget: {__thinking_budget}")
+        # 動画のinput
+        gs_url = f"gs://{BUCKET_NAME}/{blob_name}"
+        _, ext = os.path.splitext(blob_name)
+        ext = ext.lower()
+               
+        if so and eo:
+            input_video = types.Part(
+                file_data = types.FileData(file_uri=gs_url, mime_type = f"video/{ext}"),
+                video_metadata = types.VideoMetadata(
+                            start_offset=so,
+                            end_offset=eo
+                )
+            )
+            return input_video
+        else:
+            input_video = types.Part(
+                file_data = types.FileData(file_uri=gs_url, mime_type = f"video/{ext}"),
+            )
+            return input_video
 
-    # 動画のinput
-    gs_url = f"gs://{BUCKET_NAME}/{blob_name}"
-    _, ext = os.path.splitext(blob_name)
-    ext = ext.lower()
-
-    input_video = types.Part(
-        file_data = types.FileData(file_uri=gs_url, mime_type = f"video/{ext}"),
-        # video_metadata = types.VideoMetadata(
-        #             start_offset='0s',
-        #             end_offset='1s'
-        # )
-    )
-    # promptのinput
-    input_prompt = types.Part.from_text(text=prompt.strip())
-
-    contents = [
-        types.Content(
-            role = "user",
-            parts = [
-                input_video,
-                input_prompt
-            ]
-        ),
-    ]
-
-    generate_content_config = types.GenerateContentConfig(
-        temperature = 0,
-        top_p = 1,
-        seed = 0,
-        max_output_tokens = 65535,
-        thinking_config=types.ThinkingConfig(thinking_budget=__thinking_budget),
-        mediaResolution="MEDIA_RESOLUTION_LOW",
-        response_modalities = ["TEXT"],
-        safety_settings = [
+    def set_generate_content_config(self):
+        base = dict(
+            temperature=0, top_p=1, seed=0, max_output_tokens=65535,
+            response_modalities=["TEXT"],
+            safety_settings = [
             types.SafetySetting(
                 category="HARM_CATEGORY_HATE_SPEECH",
                 threshold="OFF"),
@@ -89,17 +89,237 @@ async def video_summary_with_caption_v2():
                 threshold="OFF"
                 )
             ],
-        response_mime_type = "application/json",
-        response_schema = response_schema,
+            thinking_config=types.ThinkingConfig(thinking_budget=self.thinking_budget),  # SDKに合わせる
+        )
+        if self.response_schema:
+            base.update(response_mime_type="application/json", response_schema=self.response_schema)
+        if self.media_resolution:
+            base.update(mediaResolution="MEDIA_RESOLUTION_LOW")
+        return types.GenerateContentConfig(**base)
+
+    def text2text(self, prompt):
+        print("model: ", self.model_name)
+        print("thinking budget: ", self.thinking_budget)
+        input_prompt = types.Part.from_text(text=prompt.strip())
+        contents = [
+            types.Content(
+                role = "user",
+                parts = [
+                    input_prompt
+                ]
+            ),
+        ]
+
+        self.generate_content_config = self.set_generate_content_config()
+
+        response = _client.models.generate_content(
+            model = self.model_name,
+            contents = contents,
+            config = self.generate_content_config
+        )            
+        
+        if self.response_schema:
+            return response.parsed, response
+        else:
+            return response.text, response
+
+    async def atext2text(self, prompt):
+        print("model: ", self.model_name)
+        print("thinking budget: ", self.thinking_budget)
+        input_prompt = types.Part.from_text(text=prompt.strip())
+        contents = [
+            types.Content(
+                role = "user",
+                parts = [
+                    input_prompt
+                ]
+            ),
+        ]
+
+        self.generate_content_config = self.set_generate_content_config()
+
+        response = await _client.aio.models.generate_content(
+            model = self.model_name,
+            contents = contents,
+            config = self.generate_content_config
+        )            
+        
+        if self.response_schema:
+            return response.parsed, response
+        else:
+            return response.text, response
+
+    def video2text(self, prompt):
+        if self.input_media:
+            print("model: ", self.model_name)
+            print("thinking budget: ", self.thinking_budget)
+            input_prompt = types.Part.from_text(text=prompt.strip())
+            contents = [
+                types.Content(
+                    role = "user",
+                    parts = [
+                        self.input_media,
+                        input_prompt
+                    ]
+                ),
+            ]
+
+            self.generate_content_config = self.set_generate_content_config()
+
+            response = _client.models.generate_content(
+                model = self.model_name,
+                contents = contents,
+                config = self.generate_content_config
+            )
+
+            if self.response_schema:
+                return response.parsed, response
+            else:
+                return response.text, response
+        else:
+            return "input media is not set", None
+
+    async def avideo2text(self, prompt):
+        if self.input_media:
+            print("model: ", self.model_name)
+            print("thinking budget: ", self.thinking_budget)
+            input_prompt = types.Part.from_text(text=prompt.strip())
+            contents = [
+                types.Content(
+                    role = "user",
+                    parts = [
+                        self.input_media,
+                        input_prompt
+                    ]
+                ),
+            ]
+
+            self.generate_content_config = self.set_generate_content_config()
+
+            response = await _client.aio.models.generate_content(
+                model = self.model_name,
+                contents = contents,
+                config = self.generate_content_config
+            )
+                        
+            if self.response_schema:
+                return response.parsed, response
+            else:
+                return response.text, response        
+        else:
+            return "input media is not set", None    
+
+async def video_summary_with_caption_v2():
+    input_media = {
+        "blob_name":"kaji.mp4",
+        "start_offset":"0s",
+        "end_offset":"10s",
+        "resolution":"LOW"
+    }
+
+    api_caller = geminiApiCaller(
+        model_name = "gemini-2.5-flash",
+        thinking_budget = -1,
+        response_schema = SUMMARY_SCHEMA,
+        input_media = input_media
     )
 
-    response = await __client.aio.models.generate_content(
-        model = __using_model,
-        contents = contents,
-        config = generate_content_config
+    lang = "ja"
+    video_length_sec = 10
+    hms = "0:00:10"
+    print("動画の長さ: " + hms)
+
+    prompt = VIDEO_SUMMARY_PROMPT.format(
+        lang=lang,
+        hms=hms
     )
 
-    # print(response.parsed)
+    response_parsed, response = await api_caller.avideo2text(prompt)
 
-    return response.parsed
+    return response_parsed, response
 
+class geminiApiCallerWithTool(geminiApiCaller):
+    """
+    Search Tool 付きで Gemini API を呼び出すクラス。geminiApiCallerを継承
+    """
+    def __init__(self, model_name, thinking_budget, response_schema=None, input_media=None):
+        super().__init__(
+            model_name = model_name, 
+            thinking_budget=thinking_budget, 
+            response_schema=response_schema, 
+            input_media=input_media
+        )
+
+    # オーバーライド
+    def set_generate_content_config(self):
+        # Define the grounding tool
+        grounding_tool = types.Tool(
+            google_search=types.GoogleSearch()
+        )
+        
+        base = dict(
+            temperature=0, top_p=1, seed=0, max_output_tokens=65535,
+            response_modalities=["TEXT"],
+            safety_settings = [
+            types.SafetySetting(
+                category="HARM_CATEGORY_HATE_SPEECH",
+                threshold="OFF"),
+            types.SafetySetting(
+                category="HARM_CATEGORY_DANGEROUS_CONTENT",
+                threshold="OFF"),
+            types.SafetySetting(
+                category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                threshold="OFF"),
+            types.SafetySetting(
+                category="HARM_CATEGORY_HARASSMENT",
+                threshold="OFF"
+                )
+            ],
+            thinking_config=types.ThinkingConfig(thinking_budget=self.thinking_budget),  # SDKに合わせる
+            tools=[grounding_tool]
+        )
+        if self.response_schema:
+            base.update(response_mime_type="application/json", response_schema=self.response_schema)
+        if self.media_resolution:
+            base.update(mediaResolution="MEDIA_RESOLUTION_LOW")
+        return types.GenerateContentConfig(**base)
+
+
+def search_supp_info(markdown_text):
+    """
+    テキストから関連情報を検索して有益なAppendixを作成
+    tools を使用
+    """
+    api_caller = geminiApiCallerWithTool(
+        model_name = "gemini-2.5-flash",
+        thinking_budget = -1,
+    )
+
+    lang = "ja"
+    prompt = SUPP_INFO_PROMPT.format(
+        lang=lang,
+        input_text=markdown_text
+    )
+
+    response_text, response = api_caller.text2text(prompt)
+
+    return response_text, response
+
+def format_supp_to_json(text_with_supp):
+    """
+    補足情報をJSONに整形する
+    """
+    api_caller = geminiApiCaller(
+        model_name = "gemini-2.5-flash-lite",
+        thinking_budget = 0,
+        response_schema=KEYWORDS_SCHEMA
+    )
+
+    lang = "ja"
+    prompt = KEYWORD_EXTRACT_PROMPT.format(
+        lang=lang,
+        input_text=text_with_supp
+    )
+
+    response_json, response = api_caller.text2text(prompt)
+    return response_json, response
