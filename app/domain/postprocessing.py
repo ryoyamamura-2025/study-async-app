@@ -2,6 +2,10 @@ import json
 import html
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urlparse
+
 
 # ===== Template =====
 PAGE_TEMPLATE_PATH = Path("html_render_templates/summary_first.html")
@@ -144,3 +148,27 @@ def add_citations(response):
             text = text[:end_index] + citation_string + text[end_index:]
 
     return text
+
+def fetch_final_url_and_title(url: str, follow_redirects: bool = False) -> tuple[str, str]:
+    """
+    GeminiのWeb検索で拾ってきたリダイレクトURLから正規のURLとタイトルを取得
+    リクエストに失敗した場合は、適当な文字列を返す
+    """
+    try:
+        response = requests.get(url)
+        # ドメインを取得
+        parsed_url = urlparse(response.url)
+        domain = parsed_url.netloc  # => "example.com"
+
+
+        # タイトルを取得優先し、無ければドメインを使う
+        soup = BeautifulSoup(response.text, "html.parser")
+        title = soup.title.string.strip() if soup.title and soup.title.string else domain
+
+        return response.url, title
+
+    except Exception as e:
+        print(f"[ERROR] {e}")
+        url = "https://vertexaisearch.cloud.google.com/grounding-api-redirect"
+        title = "vertexaisearch"
+        return url, title   # エラー時は適当な文字列を返す

@@ -82,3 +82,8 @@ text = """
 """.strip()
 
 print(text[337:545])
+
+import domain.postprocessing as ps
+url, title = ps.fetch_final_url_and_title("https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFOcvoIb7txqqb8eyQkB_oXqJs0TVU-yeG2LwMIQENAxyVd4cbYfXihdeeX8yfJyK-RYjU0bph6A_PrFMjL_JtlLmppduP1NwlfO0LNG_dnfySOjktQpMYDHaYafY6A-ImMDM09gCM=")
+print(url)
+print(title)
