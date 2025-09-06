@@ -86,20 +86,20 @@ KEYWORDS_SCHEMA = {
           },
           "citations": {
             "type": "array",
-            "description": "出典/参考リンクの配列",
+            "description": "出典の配列",
             "items": {
               "type": "object",
               "properties": {
                 "title": {
                   "type": "string",
-                  "description": "出典のタイトル",
-                },
-                "url": {
-                  "type": "string",
-                  "description": "出典URL",
+                  "description": "出典のタイトル(title)",
                 }
+                # "url": {
+                #   "type": "string",
+                #   "description": "出典URL",
+                # }
               },
-              "required": ["title", "url"],
+              "required": ["title"],
             }
           }
         },

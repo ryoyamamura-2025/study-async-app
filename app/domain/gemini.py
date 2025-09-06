@@ -2,8 +2,8 @@ import os
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from prompt.prompt import VIDEO_SUMMARY_PROMPT, SUPP_INFO_PROMPT
-from prompt.json_schema import SUMMARY_SCHEMA
+from prompt.prompt import VIDEO_SUMMARY_PROMPT, SUPP_INFO_PROMPT, KEYWORD_EXTRACT_PROMPT
+from prompt.json_schema import SUMMARY_SCHEMA, KEYWORDS_SCHEMA
 
 # =================================
 # Gemini 推論設定
@@ -304,3 +304,22 @@ def search_supp_info(markdown_text):
     response_text, response = api_caller.text2text(prompt)
 
     return response_text, response
+
+def format_supp_to_json(text_with_supp):
+    """
+    補足情報をJSONに整形する
+    """
+    api_caller = geminiApiCaller(
+        model_name = "gemini-2.5-flash-lite",
+        thinking_budget = 0,
+        response_schema=KEYWORDS_SCHEMA
+    )
+
+    lang = "ja"
+    prompt = KEYWORD_EXTRACT_PROMPT.format(
+        lang=lang,
+        input_text=text_with_supp
+    )
+
+    response_json, response = api_caller.text2text(prompt)
+    return response_json, response

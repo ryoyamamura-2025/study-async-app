@@ -1,6 +1,7 @@
 deploy.sh
 credentials.json
 sample_output.json
+keyword.json
 sample_output.md
 
 # Created by https://www.toptal.com/developers/gitignore/api/python

@@ -83,10 +83,10 @@ text = """
 
 print(text[337:545])
 
-import domain.postprocessing as ps
-url, title = ps.fetch_final_url_and_title("ああああ")
-print(url)
-print(title)
+# import domain.postprocessing as ps
+# url, title = ps.fetch_url_and_title("ああああ")
+# print(url)
+# print(title)
 import json
 
 # サンプルJSON

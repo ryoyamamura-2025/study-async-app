@@ -43,3 +43,37 @@ output_language = {lang}
 {input_text}
 </input_text>
 """
+
+# Required: lang, input_text
+KEYWORD_EXTRACT_PROMPT =\
+"""
+あなたはテキストを忠実にJSONに構造化する専門家です。以下のタスクに取り組んでください。
+
+<task>
+input_textタグで与えられた文章をJSONスキーマにしたがって構造化したJSONで出力してください。
+output_language = {lang}
+</task>
+
+<condition>
+- **【最重要】** JSONを作成する際、元の文章の文言を一言一句一切変更しないこと。正確かつ忠実にJSON構造化のみに注力してください。
+</condition>
+
+<example>
+input_text = "- 大分トリニータ\n\n大分トリニータは大分県を本拠地とし、J2リーグに所属する日本のプロサッカーチームの一つです[1](title: oita-trinita.co.jp/)。2025年9月6日現在のリーグでの順位は17位です[2](title: jleague.jp), [3](title: ja.wikipedia.org)。"
+
+AI output:
+{{
+  "keywords": [
+    {{
+      "keyword": "大分トリニータ", 
+      "explanation": "大分トリニータは大分県を本拠地とし、J2リーグに所属する日本のプロサッカーチームの一つです。2025年9月6日現在のリーグでの順位は17位です。"
+      "citations": [{{"title": "oita-trinita.co.jp/"}}, {{"title": "jleague.jp"}}, {{"title": "ja.wikipedia.org"}}]
+    }}
+  ]
+}}
+</example>
+
+<input_text>
+{input_text}
+</input_text>
+"""
